@@ -1,0 +1,24 @@
+version: "3.9"
+
+services:
+  spinnerr:
+    build: .
+    container_name: spinnerr
+    ports:
+      - "10000:10000"
+      - "11000:11000"
+    restart: unless-stopped
+    networks:
+      - proxynetwork
+      - spinnerr
+    environment:
+      - PORT=10000
+      - UI_PORT=11000
+      - DOCKER_PROXY_URL=tcp://dockerproxy:2375
+    volumes:
+      - /srv/dockerdata/SpinUp/config:/app/config
+networks:
+  spinnerr:
+    external: true
+  proxynetwork:
+    external: true

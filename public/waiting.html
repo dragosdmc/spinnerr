@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spinnerr</title>
+<style>
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #f0f0f0;
+    font-family: sans-serif;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  h1 {
+    margin-bottom: 16px;
+    color: #404040;
+  }
+
+  p {
+    margin-bottom: 32px;
+    color: #666;
+  }
+
+  .loader {
+    width: 48px;
+    height: 48px;
+    border: 3px solid #ccc;
+    border-radius: 50%;
+    position: relative;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+  }
+
+  .loader::after {
+    content: '';  
+    box-sizing: border-box;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    background: #FF3D00;
+    width: 16px;
+    height: 16px;
+    transform: translate(-50%, -50%) translateY(-20px);
+    border-radius: 50%;
+  }
+
+  @keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  @media (prefers-color-scheme: dark) {
+    body {
+      background: #111;
+      color: #eee;
+    }
+    p {
+      color: #bbb;
+    }
+  }
+</style>
+
+<script>
+  setInterval(async () => {
+    try {
+      const res = await fetch(window.location.href, { method: 'HEAD' });
+      if (res.ok) {
+        window.location.reload();
+      }
+    } catch(e) {
+      // still down, keep waiting
+    }
+  }, 2000); // try every 1 second
+</script>
+</head>
+<body>
+  <div class="loader"></div>
+</body>
+</html>

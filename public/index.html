@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spinnerr</title>
+<style>
+/*--------------------
+Reset & Body
+--------------------*/
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+  background: #DEDEDE;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/*--------------------
+Main container
+--------------------*/
+.main-container {
+  background: #fff;
+  padding: 30px;
+  border-radius: 40px;
+  width: 400px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+/*--------------------
+Title
+--------------------*/
+h2 {
+  text-align: center;
+  color: #FF3D00; /* main header */
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+/*--------------------
+Section Titles
+--------------------*/
+.section-title {
+  text-align: center;
+  margin: 15px 0;
+  font-weight: bold;
+  color: #555555;
+}
+
+/*--------------------
+Container list
+--------------------*/
+.container-box {
+  border: 1px solid #888888;
+  border-radius: 20px;
+  padding: 10px 15px;
+  margin-bottom: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  transition: max-height 0.3s ease, box-shadow 0.3s ease, padding-top 0.3s ease;
+  max-height: 50px; /* collapsed */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #f8f8f8;
+}
+
+.container-box.expanded {
+  max-height: 400px; /* expanded */
+  padding-top: 5px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  justify-content: flex-start;
+}
+
+.container-box strong {
+  text-align: center;
+  display: block;
+  margin-bottom: 5px;
+  color: #555555; /* container name gray */
+  font-size: 16px;
+}
+
+/* Details are hidden by default, show on click */
+.container-box .details {
+  opacity: 0;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  transition: opacity 0.3s ease;
+}
+
+.container-box.expanded .details {
+  display: flex;
+  opacity: 1;
+}
+
+.container-box input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 60px;
+  border: 1px solid #888888;
+  background: #f0f0f0;
+  color: #333;
+}
+
+/* Buttons row */
+.container-box .button-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.container-box button {
+  flex: 1;
+  border-radius: 60px;
+  border: 1px solid #888888;
+  background: #f0f0f0;
+  color: #333;
+  cursor: pointer;
+  padding: 8px;
+  transition: 0.25s;
+}
+
+.container-box button:hover {
+  background: #888888;
+  color: #fff;
+}
+
+/*--------------------
+Add container
+--------------------*/
+.add-container input,
+.add-container button {
+  width: 100%;
+  padding: 10px;
+  border-radius: 60px;
+  border: 1px solid #888888;
+  margin-bottom: 10px;
+  display: block;
+  background: #f0f0f0;
+  color: #333;
+}
+
+.add-container button {
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.add-container button:hover {
+  background: #888888;
+  color: #fff;
+}
+</style>
+</head>
+<body>
+<div class="main-container">
+  <h2>Spinnerr</h2>
+
+  <!-- Containers -->
+  <div class="section-title">Containers</div>
+  <div id="containerList"></div>
+
+  <!-- Add Container -->
+  <div class="section-title">Add Container</div>
+  <div class="add-container">
+    <input id="name" placeholder="Name">
+    <input id="url" placeholder="URL">
+    <input id="host" placeholder="Host">
+    <input id="idleTimeout" placeholder="Idle Timeout (ms)" value="30000">
+    <button onclick="addContainer()">Add</button>
+  </div>
+</div>
+
+<script>
+async function load() {
+  const cfg = await fetch("/config").then(r => r.json());
+
+  const list = document.getElementById("containerList");
+  list.innerHTML = "";
+
+  cfg.containers.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "container-box";
+    div.innerHTML = `
+      <strong>${c.name}</strong>
+      <div class="details">
+        Name: <input id="name-${c.name}" value="${c.name}">
+        URL: <input id="url-${c.name}" value="${c.url}">
+        Host: <input id="host-${c.name}" value="${c.host}">
+        Timeout: <input id="timeout-${c.name}" value="${c.idleTimeout}">
+        <div class="button-row">
+          <button onclick="update('${c.name}')">Save</button>
+          <button onclick="del('${c.name}')">Delete</button>
+        </div>
+      </div>
+    `;
+    div.addEventListener("click", e => {
+      if(!e.target.tagName.match(/INPUT|BUTTON/)) {
+        div.classList.toggle("expanded");
+      }
+    });
+    list.appendChild(div);
+  });
+}
+
+async function addContainer() {
+  const body = {
+    name: document.getElementById("name").value,
+    url: document.getElementById("url").value,
+    host: document.getElementById("host").value,
+    idleTimeout: Number(document.getElementById("idleTimeout").value)
+  };
+
+  await fetch("/config/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body)
+  });
+
+  load();
+}
+
+async function update(oldName) {
+  const nameInput = document.getElementById(`name-${oldName}`);
+  const newName = nameInput.value;
+
+  await fetch("/config/update", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: oldName,
+      updates: {
+        name: newName,
+        url: document.getElementById(`url-${oldName}`).value,
+        host: document.getElementById(`host-${oldName}`).value,
+        idleTimeout: Number(document.getElementById(`timeout-${oldName}`).value)
+      }
+    })
+  });
+
+  load();
+}
+
+async function del(name) {
+  await fetch("/config/delete", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name })
+  });
+  load();
+}
+
+load();
+</script>
+</body>
+</html>

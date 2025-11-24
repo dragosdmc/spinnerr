@@ -1,0 +1,44 @@
+{
+  "containers": [
+    {
+      "name": "flame",
+      "url": "http://flame:5005",
+      "idleTimeout": 1800,
+      "host": "flame.domain.net",
+      "friendly_name": "Flame",
+      "active": true
+    },
+    {
+      "name": "qbittorrent",
+      "url": "http://qbittorrent:9000",
+      "idleTimeout": 7200,
+      "host": "qbit.domain.net",
+      "friendly_name": "qBitTorrent",
+      "active": true
+    },
+    {
+      "name": "prowlarr",
+      "friendly_name": "Prowlarr",
+      "url": "http://prowlarr:9696",
+      "host": "prowlarr.domain.net",
+      "idleTimeout": 7200,
+      "active": true
+    },
+    {
+      "name": "sonarr",
+      "friendly_name": "Sonarr",
+      "url": "http://sonarr:8989",
+      "host": "sonarr.domain.net",
+      "idleTimeout": 7200,
+      "active": true
+    },
+    {
+      "name": "radarr",
+      "friendly_name": "Radarr",
+      "url": "http://radarr:7878",
+      "host": "radarr.domain.net",
+      "idleTimeout": 7200,
+      "active": true
+    }
+  ]
+}

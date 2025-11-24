@@ -5,13 +5,7 @@
       "name": "flame",
       "url": "http://flame:5005",
       "idleTimeout": 30000,
-      "host": "dashboard.cam14.net"
-    },
-    {
-      "name": "qbittorrent",
-      "url": "http://qbittorrent:9000",
-      "host": "qbit.cam14.net",
-      "idleTimeout": 30000
+      "host": "flame.mydomain.com"
     }
   ]
 }

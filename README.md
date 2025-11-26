@@ -16,7 +16,7 @@ The package can be pulled directly from GitHub with Docker pull or Docker Compos
 
 ##### Pull the repository
 ```
-docker pull ghcr.io/dragosdmc/spinnerr:latest
+docker pull ghcr.io/drgshub/spinnerr:latest
 ```
 ### Docker run
 ```
@@ -31,7 +31,7 @@ docker run -d \
   -e UI_PORT=11000 \
   -v /var/run/docker.sock:/var/run/docker.sock:ro \
   -v /path/to/spinnerr/config:/app/config \
-  ghcr.io/dragosdmc/spinnerr:latest
+  ghcr.io/drgshub/spinnerr:latest
 ```
 ### Docker Compose
 ```
@@ -39,7 +39,7 @@ version: "3.9"
 
 services:
   spinnerr:
-    image: ghcr.io/dragosdmc/spinnerr:latest
+    image: ghcr.io/drgshub/spinnerr:latest
     container_name: spinnerr
     ports:
       - "10000:10000"
@@ -95,7 +95,7 @@ This approach requires the use of the internal docker IPs, named and ports in co
 ```
 services:
   spinnerr:
-    image: ghcr.io/dragosdmc/spinnerr:latest
+    image: ghcr.io/drgshub/spinnerr:latest
     container_name: spinnerr
     ports:
       - "10000:10000"
@@ -123,7 +123,7 @@ This approach requires the use of the internal docker IPs, names and ports in co
 ```
 services:
   spinnerr:
-    image: ghcr.io/dragosdmc/spinnerr:latest
+    image: ghcr.io/drgshub/spinnerr:latest
     container_name: spinnerr
     ports:
       - "10000:10000"
@@ -152,7 +152,7 @@ This approach requires the use of the IP of the machine on which the containers 
 ```
 services:
   spinnerr:
-    image: spinnerr:latest
+    image: ghcr.io/drgshub/spinnerr:latest
     container_name: spinnerr
     ports:
       - "10000:10000"

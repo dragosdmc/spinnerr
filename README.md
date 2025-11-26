@@ -1,4 +1,6 @@
-# Spinnerr
+<p align="center">
+  <img width="250" height="250" alt="image" src="https://github.com/user-attachments/assets/4d7058ee-a1d2-4dee-8a43-451c36ba524f" />
+</p>
 
 Spinnerr is a lightweight Node.js-based tool that automatically starts Docker containers when they are accessed through a defined web route and stops them after a configurable idle timeout. Works best with Nginx Proxy Manager as a reverse proxy. This tool is heavily inspired by https://github.com/ItsEcholot/ContainerNursery
 

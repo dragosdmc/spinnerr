@@ -4,6 +4,8 @@ import httpProxy from "http-proxy";
 import path from "path";
 import fs from "fs";
 import containerRoutes from "./routes/containerRoutes.js"; 
+import groupRoutes from "./routes/groupRoutes.js";
+
 
 const app = express();
 const proxy = httpProxy.createProxyServer({});
@@ -11,6 +13,7 @@ const waitingPage = path.join("/app/public", "waiting.html");
 const config = JSON.parse(fs.readFileSync("/app/config/config.json"));
 const PORT = process.env.PORT || config.port
 let containers = config.containers;
+let groups = config.groups;
 
 const lastActivity = {};
 containers.forEach(c => lastActivity[c.name] = Date.now());
@@ -67,6 +70,28 @@ function isContainerRunning(name) {
   return false;
 }
 
+//----------------------------------------------------------------
+// Get all containers from Docker
+//----------------------------------------------------------------
+function allContainers() {
+  if (HAS_SOCKET) {
+    try {
+      const output = execSync(`docker ps -a --format '{{.Names}}'`).toString().trim();
+      return output.split('\n');
+    } catch {
+      return [];
+    }
+  } else if (DOCKER_PROXY_URL) {
+    try {
+      const res = execSync(`curl -s ${DOCKER_PROXY_URL.replace("tcp://", "http://")}/containers/json?all=1`).toString();
+      const containers = JSON.parse(res);
+      return containers.map(c => c.Names[0].replace(/^\//, ''));
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
 
 //----------------------------------------------------------------
 // Determine container start time in order to prevent stopping earlier if container was started manually
@@ -103,7 +128,7 @@ function checkStartTime(name, idleTimeout){
     if (logOnce){
       log(`<${name}> timeout reached from last web request, checking for timeout from START time`);
       if (!(now - startTime > idleTimeout * 1000)){
-        log(`<${name}> timeout not reached, will stop once timeout reaches ${idleTimeout} seconds`);
+        log(`<${name}> timeout not reached, will stop once timeout reaches ${idleTimeout} seconds from START time and ACTIVATION time`);
       }
     }
 
@@ -114,6 +139,39 @@ function checkStartTime(name, idleTimeout){
     console.error('Error checking container start time:', e.message);
     return false;
   }
+}
+
+//----------------------------------------------------------------
+// Check if container activation is more than timeout ago
+//----------------------------------------------------------------
+function checkActivationTime(name, idleTimeout){
+  const activatedAt = containers.find(c => c.name === name)?.activatedAt;
+  if (!activatedAt) return false;
+
+  const now = Date.now();
+  return now - activatedAt > idleTimeout * 1000;
+}
+
+//----------------------------------------------------------------
+// Check if container is part of a group
+//----------------------------------------------------------------
+function isContainerInGroup(name, groups) {
+  for (const g of groups) {
+    if (!g.active) continue;
+    if (!g.container) continue;
+
+    if (Array.isArray(g.container)) {
+      if (g.container.includes(name)) {
+        return true;
+      }
+    } else {
+      if (g.container === name) {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 
 
@@ -160,6 +218,7 @@ function stopContainer(name) {
 //----------------------------------------------------------------
 app.use(express.json());
 app.use("/api/containers", containerRoutes);
+app.use("/api/groups", groupRoutes);
 
 app.locals.startContainer = startContainer;
 app.locals.stopContainer = stopContainer;
@@ -176,6 +235,7 @@ const ui = express();
 ui.use(express.json());                     // keep JSON parsing
 ui.use("/api/containers", containerRoutes); // container API routes
 ui.use(express.static("/app/public/ui"));  // serve HTML/CSS/JS
+ui.use("/api/groups", groupRoutes); // group API routes
 
 // Expose container control utilities to UI routes
 
@@ -183,6 +243,7 @@ ui.locals.isContainerRunning = isContainerRunning;
 ui.locals.startContainer = startContainer;
 ui.locals.stopContainer = stopContainer;
 ui.locals.lastActivity = lastActivity;
+ui.locals.allContainers = allContainers;
 
 // Start UI server if defined
 if (UI_PORT){ 
@@ -190,7 +251,6 @@ if (UI_PORT){
     log(`WebUI running on port ${UI_PORT}`);
   });
 }
-
 
 //----------------------------------------------------------------
 // Main proxy middleware
@@ -202,11 +262,39 @@ app.use(async (req, res, next) => {
   // Update the timestamp when the container was last accessed via web requests
   lastActivity[container.name] = Date.now(); 
 
+  // Helper: find active group containing this container
+  const group = groups.find(g =>
+    g.active &&
+    g.container &&
+    (Array.isArray(g.container)
+      ? g.container.includes(container.name)
+      : g.container === container.name)
+  );
+
   // If the container is running, redirect to it's webpage, else start the container
   if (isContainerRunning(container.name)) {
     return proxy.web(req, res, { target: container.url });
-  } else if (container.active){
-    startContainer(container.name);
+  } 
+
+  // Not running — must start it (or its group)
+  if (container.active) {
+    if (group) {
+      // Start every container in the group
+      const names = Array.isArray(group.container)
+        ? group.container
+        : [group.container];
+
+      names.forEach(name => {
+        if (!isContainerRunning(name)) {
+          startContainer(name);
+        }
+      });
+
+      console.log(`Starting group <${group.name}> because <${container.name}> was accessed`);
+    } else {
+      // Start single container normally
+      startContainer(container.name);
+    }
   }
 
   // If the service endpoint is reachable, serve the webpage; else serve the waiting page until ready
@@ -245,15 +333,55 @@ proxy.on('proxyRes', (proxyRes, req) => {
 //----------------------------------------------------------------
 setInterval(() => {
   const now = Date.now();
+  // ─────────────────────────────────────────────
+  // INDIVIDUAL CONTAINER TIMEOUT (non-group)
+  // ─────────────────────────────────────────────
   containers.forEach(c => {
-    if (c.active && now - lastActivity[c.name] > (c.idleTimeout || 60) * 1000 && isContainerRunning(c.name) && checkStartTime(c.name, c.idleTimeout)) {
+    if (c.idleTimeout
+    && !isContainerInGroup(c.name, groups)
+    && c.active && now - lastActivity[c.name] > (c.idleTimeout || 60) * 1000 
+    && isContainerRunning(c.name) 
+    && checkStartTime(c.name, c.idleTimeout)
+    && checkActivationTime(c.name, c.idleTimeout)) {
       log(`<${c.name}> ${(c.idleTimeout || 60)} seconds timeout reached`);
       stopContainer(c.name);
       log(`<${c.name}> stopped successfully`);
       logOnce = true;
     }
   });
+  // ─────────────────────────────────────────────
+  // GROUP TIMEOUT (stop ALL containers in group)
+  // ─────────────────────────────────────────────
+  groups.forEach(g => {
+    if (!g.active || !g.idleTimeout || !g.container) return;
+
+    const groupContainers = Array.isArray(g.container)
+      ? g.container
+      : [g.container];
+
+    // Check if ANY container in group exceeds timeout
+    const shouldStopGroup = groupContainers.some(name => {
+      return (
+        isContainerRunning(name) &&
+        now - lastActivity[name] > (g.idleTimeout || 60) * 1000 &&
+        checkStartTime(name, g.idleTimeout)
+      );
+    });
+
+    if (shouldStopGroup) {
+      log(`Group <${g.name}> timeout reached (${g.idleTimeout}s). Stopping group.`);
+
+      // Stop ALL containers in the group
+      groupContainers.forEach(name => {
+        if (isContainerRunning(name)) {
+          stopContainer(name);
+          log(`<${name}> stopped as part of group <${g.name}>`);
+        }
+      });
+    }
+  });
 }, 5000);
+
 
 //----------------------------------------------------------------
 // Reload configuration function
@@ -269,6 +397,7 @@ function reloadConfig() {
       }
     });
 
+    groups = newConfig.groups;
     containers = newConfig.containers;
     log("Config reloaded, containers updated");
   } catch (e) {

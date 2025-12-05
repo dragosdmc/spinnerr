@@ -3,42 +3,79 @@
     {
       "name": "flame",
       "url": "http://flame:5005",
-      "idleTimeout": 1800,
-      "host": "flame.domain.net",
+      "idleTimeout": 30,
+      "host": "dashboard.mydomain.com",
       "friendly_name": "Flame",
-      "active": true
+      "active": true,
+      "activatedAt": 1764946037780
     },
     {
       "name": "qbittorrent",
       "url": "http://qbittorrent:9000",
       "idleTimeout": 7200,
-      "host": "qbit.domain.net",
+      "host": "qbit.mydomain.com",
       "friendly_name": "qBitTorrent",
-      "active": true
+      "active": true,
+      "activatedAt": 1764705929661
     },
     {
       "name": "prowlarr",
       "friendly_name": "Prowlarr",
       "url": "http://prowlarr:9696",
-      "host": "prowlarr.domain.net",
-      "idleTimeout": 7200,
-      "active": true
+      "host": "prowlarr.mydomain.com",
+      "idleTimeout": 6,
+      "active": true,
+      "activatedAt": 1764900190388
     },
     {
       "name": "sonarr",
       "friendly_name": "Sonarr",
       "url": "http://sonarr:8989",
-      "host": "sonarr.domain.net",
-      "idleTimeout": 7200,
-      "active": true
+      "host": "sonarr.mydomain.com",
+      "idleTimeout": 7,
+      "active": true,
+      "activatedAt": 1764900194494
     },
     {
       "name": "radarr",
       "friendly_name": "Radarr",
       "url": "http://radarr:7878",
-      "host": "radarr.domain.net",
-      "idleTimeout": 7200,
+      "host": "radarr.mydomain.com",
+      "idleTimeout": 5,
+      "active": true,
+      "activatedAt": 1764934530244
+    }
+  ],
+  "order": [
+    "sonarr",
+    "qbittorrent",
+    "flame",
+    "prowlarr",
+    "radarr"
+  ],
+  "groups": [
+    {
+      "container": [
+        "qbittorrent",
+        "prowlarr",
+        "radarr",
+        "sonarr"
+      ],
+      "name": "Media",
+      "idleTimeout": 30,
+      "active": false
+    },
+    {
+      "container": [
+        "flame"
+      ],
+      "name": "Other",
+      "idleTimeout": 0,
       "active": true
     }
+  ],
+  "groupOrder": [
+    "Media",
+    "Other"
   ]
 }

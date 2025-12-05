@@ -1,31 +1,20 @@
 import express from "express";
-import fs from "fs";
-import path from "path";
+import { readConfig, saveConfig } from "./helpers.js";
 
 const router = express.Router();
-const configPath = path.join("/app/config", "config.json");
-
-// Helpers -------------------------------
-function readConfig() {
-  try {
-    const raw = fs.readFileSync(configPath);
-    const parsed = JSON.parse(raw);
-    return { containers: parsed.containers || [] };
-  } catch (err) {
-    console.error("Failed to read config:", err);
-    return { containers: [] };
-  }
-}
-
-function saveConfig(config) {
-  fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
-}
 
 // Routes --------------------------------
 
-// GET all containers
+// GET all containers in config
 router.get("/", (req, res) => {
-  res.json(readConfig().containers);
+  const { containers, order } = readConfig();
+  res.json({ containers, order });
+});
+
+// Get ALL container names in Docker  
+router.get("/names", (req, res) => {
+  const names = req.app.locals.allContainers(); // ["spinnerr", "portainer", ...]
+  res.json(names);
 });
 
 // GET one container
@@ -55,11 +44,16 @@ router.post("/", (req, res) => {
 
 // UPDATE container
 router.put("/:name", (req, res) => {
-  const updates = req.body;
+  const updates = { ...req.body };
+  const { active } = updates;
   const config = readConfig();
 
   const container = config.containers.find(c => c.name === req.params.name);
   if (!container) return res.status(404).json({ error: "Container not found" });
+
+  if (typeof active === "boolean") {
+    updates.activatedAt = active ? Date.now() : null;
+  }
 
   Object.assign(container, updates);
   saveConfig(config);
@@ -117,5 +111,24 @@ router.get("/:name/status", (req, res) => {
     lastActivity
   });
 });
+
+// POST /api/containers/order
+router.post("/order", (req, res) => {
+  const { order } = req.body;
+  if (!Array.isArray(order)) return res.status(400).json({ error: "Invalid order array" });
+
+  const config = readConfig();
+
+  // Ensure every name in order exists in containers
+  const containerNames = config.containers.map(c => c.name);
+  const validOrder = order.filter(name => containerNames.includes(name));
+
+  // Update order in config
+  config.order = validOrder;
+
+  saveConfig(config);
+  res.json({ message: "Order saved", order: validOrder });
+});
+
 
 export default router;

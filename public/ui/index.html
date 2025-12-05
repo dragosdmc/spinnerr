@@ -1,73 +1,14 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Spinnerr</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <header>
-    <div class="header-inner">
-      <h1>Spinnerr</h1>
-      <div class="loader"></div>
-    </div>
-  </header>
-
-<main>
-  <div id="container-wrapper">
-    <!-- Containers grid (including Add card as last item) -->
-    <div id="container-grid">
-      <!-- Existing container cards injected by JS -->
-
-      <!-- Add new container card -->
-      <div id="add-container-card" class="container-card add-card">
-        <span>+</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Modal -->
-  <div id="add-container-modal" class="modal">
-    <div class="modal-content">
-      <h2>Add Container</h2>
-      <label><input type="text" id="modal-friendly-name" placeholder="Display Name (e.g.Spinnerr)"></label>
-      <label><input type="text" id="modal-name" placeholder="Container Name (e.g. spinnerr)""></label>
-      <label><input type="text" id="modal-url" placeholder="Internal URL (e.g. http://spinnerr:11000)"></label>
-      <label><input type="text" id="modal-host" placeholder="External URL (e.g. spinnerr.domain.com)"></label>
-      <label><input type="number" id="modal-idle" placeholder="Timeout in seconds"></label>
-      <label class="toggle-wrap">
-        <input type="checkbox" id="modal-active" checked>
-        <span class="toggle-slider"></span>
-      </label>
-      <div class="modal-buttons">
-        <button id="modal-submit">Add</button>
-        <button id="modal-cancel">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-    <!-- Edit Container Modal -->
-  <div id="edit-container-modal" class="modal">
-    <div class="modal-content">
-      <h2>Edit Container</h2>
-      <label><input type="text" id="edit-friendly-name" placeholder="Display Name"></label>
-      <label><input type="text" id="edit-name" placeholder="Container Name"></label>
-      <label><input type="text" id="edit-url" placeholder="Internal URL"></label>
-      <label><input type="text" id="edit-host" placeholder="External URL"></label>
-      <label><input type="number" id="edit-idle" placeholder="Timeout in seconds"></label>
-      <label class="toggle-wrap">
-        <input type="checkbox" id="edit-active">
-        <span class="toggle-slider"></span>
-      </label>
-      <div class="modal-buttons">
-        <button id="edit-save">Save</button>
-        <button id="edit-delete">Delete</button>
-        <button id="edit-cancel">Cancel</button>
-      </div>
-    </div>
-  </div>
-</main>
-
-  <script src="app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spinnerr</title>
+    <script type="module" crossorigin src="/assets/index-BcxVsjJW.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CYQQDUrL.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>

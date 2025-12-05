@@ -1,7 +1,8 @@
-version: "3.9"
+### USING DOCKER SOCKET PROXY
 
 services:
   spinnerr:
+    build: .
     image: ghcr.io/drgshub/spinnerr:latest
     container_name: spinnerr
     ports:
@@ -14,7 +15,7 @@ services:
     environment:
       - PORT=10000
       - UI_PORT=11000
-      - DOCKER_PROXY_URL=tcp://socket-proxy:2375
+      - DOCKER_PROXY_URL=tcp://docker-socket-proxy:2375
     volumes:
       - /path/to/spinnerr/config:/app/config
 networks:
@@ -22,3 +23,46 @@ networks:
     external: true
   proxynetwork:
     external: true
+
+### USING MOUNTED SOCKET
+
+services:
+  spinnerr:
+    build: .
+    image: ghcr.io/drgshub/spinnerr:latest
+    container_name: spinnerr
+    ports:
+      - "10000:10000"
+      - "11000:11000"
+    restart: unless-stopped
+    networks:
+      - proxynetwork
+      - spinnerr
+    environment:
+      - PORT=10000
+      - UI_PORT=11000
+    volumes:
+      - /path/to/spinnerr/config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock
+networks:
+  spinnerr:
+    external: true
+
+### USING HOST NETWORK
+
+services:
+  spinnerr:
+    build: .
+    image: ghcr.io/drgshub/spinnerr:latest
+    container_name: spinnerr
+    ports:
+      - "10000:10000"
+      - "11000:11000"
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      - PORT=10000
+      - UI_PORT=11000
+    volumes:
+      - /path/to/spinnerr/config:/app/config 
+      - /var/run/docker.sock:/var/run/docker.sock

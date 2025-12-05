@@ -130,8 +130,6 @@ And dark mode:
 
 <img width="1710" height="745" alt="image" src="https://github.com/user-attachments/assets/a8dd7ef3-ee01-4c35-a230-1372b6245106" />
 
-
-
 ## Variables
 
 Variable | Usage 
@@ -140,7 +138,22 @@ PORT | Port of the reverse proxy
 UI_PORT | Port of the Web UI
 DOCKER_PROXY_URL | Address of the socket proxy, must start with tcp://
 
+## Contribute
+
+<a href="https://buymeacoffee.com/dragosul">
+  <img 
+    src="https://github.com/user-attachments/assets/b43734fe-aa49-4e1e-862e-83ec5ac65526"
+    width="300" 
+    height="180"
+    alt="image"
+  />
+</a>
+
 ## License
 
 Spinnerr is licensed under the [Apache License 2.0](./LICENSE).  
 See the LICENSE file for details.
+
+----------
+
+

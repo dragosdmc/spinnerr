@@ -97,7 +97,7 @@ Although the tool supports basic HTTP reverse proxying, it’s generally better 
     {
       "name": "flame", <--------- name of the container in the docker network
       "url": "http://flame:5005", <----- web access of the container in the docker network
-      "idleTimeout": 180000,  <-------- timeout after no webrequests have been received
+      "idleTimeout": 180000,  <-------- timeout after no webrequests have been received, 0 will disable stopping the container after timeout
       "host": "flame.mydomain.com" <------- domain used to access the service
     }
   ...
@@ -105,6 +105,10 @@ Although the tool supports basic HTTP reverse proxying, it’s generally better 
 ```
 
 For the above example, Nginx needs to point to <host-ip>:<PORT>, where PORT is defined in the environment variables.
+
+## Groups
+
+Containers added in Spinnerr can be grouped up in order to be stopped and started together. As long as the group is active, the timeout will override the individual container timeout. Same as containers, the idle timeout can be set to 0 in order to prevent stopping the containers after the timeout is reached (this value still overides the individual container timeout).
 
 ## Web UI
 

@@ -6,7 +6,6 @@ import fs from "fs";
 import containerRoutes from "./routes/containerRoutes.js"; 
 import groupRoutes from "./routes/groupRoutes.js";
 
-
 const app = express();
 ///const proxy = httpProxy.createProxyServer({});
 const waitingPage = path.join("/app/public", "waiting.html");
@@ -18,9 +17,14 @@ let groups = config.groups;
 const lastActivity = {};
 containers.forEach(c => lastActivity[c.name] = Date.now());
 
+
+//----------------------------------------------------------------
+// Create proxy server
+//----------------------------------------------------------------
+
 const proxy = httpProxy.createProxyServer({
   ws: true,
-  changeOrigin: true
+  changeOrigin: false
 });
 
 // WebSocket fix
@@ -30,7 +34,6 @@ proxy.on("proxyReq", (proxyReq, req, res) => {
     proxyReq.setHeader("Upgrade", req.headers.upgrade);
   }
 });
-
 
 //----------------------------------------------------------------
 // Log function
@@ -288,7 +291,7 @@ app.use(async (req, res, next) => {
 
   // If the container is running, redirect to it's webpage, else start the container
   if (isContainerRunning(container.name)) {
-    return proxy.web(req, res, { target: container.url });
+    return proxy.web(req, res, { target: container.url, secure: false, changeOrigin: false });
   } 
 
   // Not running — must start it (or its group)
@@ -305,7 +308,7 @@ app.use(async (req, res, next) => {
         }
       });
 
-      console.log(`Starting group <${group.name}> because <${container.name}> was accessed`);
+      log(`<${container.name}> was accessed, starting group <${group.name}>`);
     } else {
       // Start single container normally
       startContainer(container.name);
@@ -316,7 +319,7 @@ app.use(async (req, res, next) => {
   try {
     const r = await fetch(`${container.url}/health`, { method: "GET" });
     if (r.ok) {
-      return proxy.web(req, res, { target: container.url });
+      return proxy.web(req, res, { target: container.url, secure: false, changeOrigin: false });
     }
   } catch {}
 
@@ -384,11 +387,14 @@ setInterval(() => {
     });
 
     if (shouldStopGroup) {
-      log(`Group <${g.name}> timeout reached (${g.idleTimeout}s). Stopping group.`);
+      //log(`Group <${g.name}> timeout reached (${g.idleTimeout}s). Stopping group.`);
 
       // Stop ALL containers in the group
       groupContainers.forEach(name => {
-        if (isContainerRunning(name)) {
+
+      const container = containers.find(c => c.name === name);
+
+        if (isContainerRunning(name) && container.active) {
           stopContainer(name);
           log(`<${name}> stopped as part of group <${g.name}>`);
         }
@@ -442,6 +448,5 @@ const server = app.listen(PORT, () => {
 server.on("upgrade", (req, socket, head) => {
   const container = containers.find(c => c.host === req.headers.host);
   if (!container) return socket.destroy();
-  proxy.ws(req, socket, head, { target: container.url, ws: true, changeOrigin: true, xfwd: true });
+  proxy.ws(req, socket, head, { target: container.url, ws: true, changeOrigin: false, xfwd: true });
 });
-
